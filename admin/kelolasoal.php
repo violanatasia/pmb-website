@@ -7,7 +7,6 @@ if (!isset($_SESSION['admin'])) {
     exit;
 }
 
-// Ambil username admin
 $admin_username = $_SESSION['username'] ?? 'Admin';
 
 /* SIMPAN */
@@ -68,12 +67,8 @@ $total = mysqli_num_rows($soal);
 <meta charset="UTF-8">
 <title>Kelola Soal - Oriental University</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- Font Awesome -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
 <style>
 * {
   margin: 0;
@@ -83,45 +78,42 @@ $total = mysqli_num_rows($soal);
 
 body {
   font-family: 'Poppins', sans-serif;
-  background: #f0f2f5;
+  background: #f5f5f5;
 }
 
-/* ================= CONTAINER ================= */
+/* CONTAINER */
 .container {
   display: flex;
   min-height: 100vh;
 }
 
-/* ================= SIDEBAR ================= */
+/* SIDEBAR */
 .sidebar {
-  width: 250px;
+  width: 260px;
   background: #7b0f0f;
   color: white;
-  padding: 25px 20px;
   position: fixed;
   height: 100vh;
+  padding: 25px 0;
   box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  overflow-y: auto;
 }
 
 .sidebar h2 {
   text-align: center;
   margin-bottom: 30px;
-  font-size: 22px;
-  padding-bottom: 15px;
+  font-size: 20px;
+  padding: 0 20px 15px;
   border-bottom: 1px solid rgba(255,255,255,0.2);
-  font-weight: 600;
-  letter-spacing: 1px;
 }
 
 .sidebar a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 15px;
+  padding: 12px 25px;
   color: white;
   text-decoration: none;
-  border-radius: 10px;
-  margin-bottom: 5px;
   transition: all 0.3s;
   font-size: 14px;
 }
@@ -134,128 +126,138 @@ body {
 .sidebar a:hover {
   background: #f5b400;
   color: #7b0f0f;
-  transform: translateX(3px);
 }
 
 .sidebar a.active {
   background: #f5b400;
   color: #7b0f0f;
-  font-weight: 500;
 }
 
 .sidebar a.logout {
-  margin-top: 40px;
+  margin-top: 50px;
   border-top: 1px solid rgba(255,255,255,0.2);
   padding-top: 20px;
 }
 
-/* ================= CONTENT ================= */
+/* CONTENT */
 .content {
   flex: 1;
-  margin-left: 250px;
-  padding: 25px 30px;
+  margin-left: 260px;
+  padding: 30px;
+  min-height: 100vh;
 }
 
-/* Header */
-.header {
+/* TOP BAR */
+.top-bar {
   background: white;
   padding: 20px 25px;
-  border-radius: 16px;
+  border-radius: 12px;
   margin-bottom: 25px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-  border: 1px solid #eee;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.header h1 {
+.top-bar h1 {
   color: #7b0f0f;
   font-size: 24px;
   font-weight: 600;
-  position: relative;
 }
 
-.header h1::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 50px;
-  height: 3px;
-  background: #f5b400;
-  border-radius: 10px;
-}
-
-.header .user-info {
+.user-info {
   display: flex;
   align-items: center;
   gap: 10px;
   background: #f8f9fa;
   padding: 8px 18px;
-  border-radius: 30px;
-  border: 1px solid #eee;
+  border-radius: 25px;
 }
 
-.header .user-info i {
+.user-info i {
   color: #7b0f0f;
   font-size: 18px;
 }
 
-.header .user-info span {
-  font-weight: 500;
-  color: #333;
+/* TOTAL CARD */
+.total-card {
+  background: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  border-left: 4px solid #7b0f0f;
 }
 
-/* Cards */
-.card {
+.total-card span {
+  font-size: 14px;
+  color: #666;
+}
+
+.total-card .badge {
+  background: #7b0f0f;
+  color: white;
+  padding: 6px 18px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* FORM CARD */
+.form-card {
   background: white;
   padding: 25px;
-  border-radius: 16px;
+  border-radius: 12px;
   margin-bottom: 25px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-  border: 1px solid #eee;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.card h3 {
+.form-card h3 {
   color: #7b0f0f;
   font-size: 18px;
   margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
-.card h3 i {
-  color: #7b0f0f;
+.form-card h3 i {
+  margin-right: 8px;
 }
 
-/* Form */
 .form-group {
   margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 6px;
   font-size: 13px;
   font-weight: 500;
   color: #555;
+  margin-bottom: 6px;
 }
 
 .form-group label i {
   color: #7b0f0f;
   margin-right: 5px;
+  width: 18px;
 }
 
 input, textarea, select {
   width: 100%;
-  padding: 12px 15px;
-  border-radius: 12px;
-  border: 1.5px solid #e0e0e0;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
   font-family: 'Poppins', sans-serif;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -264,206 +266,168 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(123,15,15,0.1);
 }
 
-textarea {
-  min-height: 100px;
-  resize: vertical;
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 5px;
 }
 
 .btn {
+  width: 100%;
+  padding: 12px;
   background: #7b0f0f;
   color: white;
   border: none;
-  padding: 14px 20px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  width: 100%;
-  font-size: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  margin-top: 10px;
+  transition: 0.3s;
 }
 
 .btn:hover {
   background: #5e0b0b;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(123,15,15,0.2);
 }
 
-.btn i {
-  font-size: 16px;
+/* TABLE CARD */
+.table-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-/* Table */
+.table-card h3 {
+  color: #7b0f0f;
+  font-size: 18px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.table-card h3 i {
+  margin-right: 8px;
+}
+
 .table-responsive {
   overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-table th {
+.data-table th {
   text-align: left;
-  padding: 15px 12px;
+  padding: 12px;
   background: #f8f9fa;
   color: #555;
   font-size: 13px;
   font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-table td {
+.data-table td {
   padding: 12px;
   border-bottom: 1px solid #eee;
-  font-size: 14px;
+  font-size: 13px;
   color: #444;
 }
 
-table tr:hover td {
+.data-table tr:hover td {
   background: #fafafa;
 }
 
-/* Preview Soal */
-.preview-row {
-  background: #fafafa;
+/* BADGE */
+.badge-jawaban {
+  background: #f5b400;
+  color: #7b0f0f;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
 }
 
-.preview-cell {
-  padding: 20px !important;
-  background: #f8f9fa;
-  border-bottom: 2px solid #ddd !important;
+/* ACTION */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.action-buttons a {
+  color: #7b0f0f;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+.action-buttons a:hover {
+  background: #f0f0f0;
+}
+
+.action-buttons .delete {
+  color: #dc3545;
+}
+
+.action-buttons .delete:hover {
+  background: #ffe9e9;
+}
+
+/* PREVIEW */
+.preview-row td {
+  background: #fafafa;
+  padding: 15px 20px !important;
 }
 
 .preview-box {
   background: white;
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 15px;
   border: 1px solid #e0e0e0;
 }
 
-.preview-title {
-  font-size: 14px;
-  color: #7b0f0f;
-  font-weight: 600;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
 .preview-question {
-  background: #f8f9fa;
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  font-size: 15px;
-  color: #333;
-  border-left: 4px solid #7b0f0f;
+  font-size: 13px;
+  margin-bottom: 12px;
+  padding-left: 10px;
+  border-left: 3px solid #7b0f0f;
+  font-weight: 500;
 }
 
-.opsi-grid {
+.preview-opsi {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.opsi-item {
-  padding: 12px 15px;
-  border-radius: 10px;
-  border: 1.5px solid #e0e0e0;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.opsi-item.benar {
-  background: #e8f5e9;
-  border-color: #2e7d32;
-  color: #2e7d32;
-  font-weight: 500;
-  position: relative;
-}
-
-.opsi-item.benar::after {
-  content: '✓';
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-weight: bold;
-}
-
-.opsi-item .huruf {
-  font-weight: 600;
-  color: #7b0f0f;
-  margin-right: 8px;
-}
-
-.opsi-item.benar .huruf {
-  color: #2e7d32;
-}
-
-/* Badge */
-.badge {
-  display: inline-block;
-  padding: 5px 12px;
-  border-radius: 30px;
+  gap: 8px;
   font-size: 12px;
-  font-weight: 600;
-  background: #f5b400;
-  color: #7b0f0f;
 }
 
-/* Action Links */
-.action-links {
-  display: flex;
-  gap: 10px;
+.preview-opsi span {
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #eee;
 }
 
-.action-links a {
-  color: #7b0f0f;
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 8px;
-  transition: 0.2s;
+.preview-opsi span.benar {
+  background: #e8f5e9;
+  border-color: #28a745;
+  color: #155724;
 }
 
-.action-links a:hover {
-  background: #f0f0f0;
-}
-
-.action-links a.hapus {
-  color: #b00000;
-}
-
-.action-links a.hapus:hover {
-  background: #ffebee;
-}
-
-/* Total Soal Badge */
-.total-badge {
-  display: inline-block;
-  background: #7b0f0f;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 30px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.total-badge i {
-  margin-right: 5px;
-}
-
-/* Responsive */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .sidebar {
     width: 70px;
-    padding: 20px 10px;
   }
   
   .sidebar h2,
@@ -483,31 +447,21 @@ table tr:hover td {
   
   .content {
     margin-left: 70px;
-    padding: 20px 15px;
-  }
-  
-  .header {
-    flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
-  }
-  
-  .opsi-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .card {
     padding: 20px;
   }
   
-  table {
-    font-size: 13px;
+  .top-bar {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
   }
   
-  table th, table td {
-    padding: 10px 8px;
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .preview-opsi {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -515,67 +469,58 @@ table tr:hover td {
 <body>
 
 <div class="container">
-
-  <!-- INCLUDE SIDEBAR -->
   <?php include "sidebar.php"; ?>
-
-  <!-- CONTENT -->
+  
   <div class="content">
-    
-    <!-- HEADER -->
-    <div class="header">
+    <!-- TOP BAR -->
+    <div class="top-bar">
       <h1>Kelola Soal</h1>
       <div class="user-info">
         <i class="fas fa-user-circle"></i>
         <span><?= htmlspecialchars($admin_username) ?></span>
       </div>
     </div>
-
-    <!-- TOTAL SOAL CARD -->
-    <div class="card" style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <i class="fas fa-database" style="color: #7b0f0f; font-size: 20px;"></i>
-        <span style="font-weight: 500;">Total Soal</span>
-      </div>
-      <span class="total-badge">
-        <i class="fas fa-question-circle"></i> <?= $total ?> Soal
-      </span>
+    
+    <!-- TOTAL CARD -->
+    <div class="total-card">
+      <span><i class="fas fa-database"></i> Total Soal dalam Sistem</span>
+      <div class="badge"><?= $total ?> Soal</div>
     </div>
-
-    <!-- FORM TAMBAH/EDIT SOAL -->
-    <div class="card">
+    
+    <!-- FORM CARD -->
+    <div class="form-card">
       <h3>
         <i class="fas fa-<?= $edit ? 'edit' : 'plus-circle' ?>"></i>
         <?= $edit ? "Edit Soal" : "Tambah Soal Baru" ?>
       </h3>
-
+      
       <form method="post">
         <input type="hidden" name="id" value="<?= $edit['id'] ?? '' ?>">
-
+        
         <div class="form-group">
-          <label><i class="fas fa-question"></i> Pertanyaan</label>
+          <label><i class="fas fa-question-circle"></i> Pertanyaan</label>
           <textarea name="pertanyaan" placeholder="Tulis pertanyaan di sini..." required><?= $edit['pertanyaan'] ?? '' ?></textarea>
         </div>
-
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
+        
+        <div class="options-grid">
           <div class="form-group">
-            <label><i class="fas fa-a"></i> Opsi A</label>
+            <label><i class="fas fa-circle"></i> Opsi A</label>
             <input name="opsi_a" placeholder="Opsi A" value="<?= $edit['opsi_a'] ?? '' ?>" required>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-b"></i> Opsi B</label>
+            <label><i class="fas fa-circle"></i> Opsi B</label>
             <input name="opsi_b" placeholder="Opsi B" value="<?= $edit['opsi_b'] ?? '' ?>" required>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-c"></i> Opsi C</label>
+            <label><i class="fas fa-circle"></i> Opsi C</label>
             <input name="opsi_c" placeholder="Opsi C" value="<?= $edit['opsi_c'] ?? '' ?>" required>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-d"></i> Opsi D</label>
+            <label><i class="fas fa-circle"></i> Opsi D</label>
             <input name="opsi_d" placeholder="Opsi D" value="<?= $edit['opsi_d'] ?? '' ?>" required>
           </div>
         </div>
-
+        
         <div class="form-group">
           <label><i class="fas fa-check-circle"></i> Jawaban Benar</label>
           <select name="jawaban" required>
@@ -587,23 +532,19 @@ table tr:hover td {
             <?php endforeach; ?>
           </select>
         </div>
-
+        
         <button name="simpan" class="btn">
-          <i class="fas fa-<?= $edit ? 'save' : 'plus' ?>"></i>
-          <?= $edit ? "Update Soal" : "Simpan Soal" ?>
+          <i class="fas fa-save"></i> <?= $edit ? "Update Soal" : "Simpan Soal" ?>
         </button>
       </form>
     </div>
-
-    <!-- DAFTAR SOAL -->
-    <div class="card">
-      <h3>
-        <i class="fas fa-list"></i>
-        Daftar Soal
-      </h3>
-
+    
+    <!-- TABLE CARD -->
+    <div class="table-card">
+      <h3><i class="fas fa-list"></i> Daftar Soal</h3>
+      
       <div class="table-responsive">
-        <table>
+        <table class="data-table">
           <thead>
             <tr>
               <th>No</th>
@@ -615,54 +556,44 @@ table tr:hover td {
           <tbody>
             <?php 
             $no = 1; 
-            mysqli_data_seek($soal, 0); // Reset pointer
-            while($row = mysqli_fetch_assoc($soal)): 
+            mysqli_data_seek($soal, 0);
+            if($total > 0):
+              while($row = mysqli_fetch_assoc($soal)): 
             ?>
             <tr>
               <td><?= $no++ ?></td>
               <td><?= htmlspecialchars($row['pertanyaan']) ?></td>
-              <td>
-                <span class="badge"><?= $row['jawaban'] ?></span>
-              </td>
-              <td>
-                <div class="action-links">
-                  <a href="?edit=<?= $row['id'] ?>">
-                    <i class="fas fa-edit"></i> Edit
-                  </a>
-                  <a class="hapus" href="?hapus=<?= $row['id'] ?>" onclick="return confirm('Yakin ingin menghapus soal ini?')">
-                    <i class="fas fa-trash"></i> Hapus
-                  </a>
-                </div>
+              <td><span class="badge-jawaban"><?= $row['jawaban'] ?></span></td>
+              <td class="action-buttons">
+                <a href="?edit=<?= $row['id'] ?>"><i class="fas fa-edit"></i> Edit</a>
+                <a href="?hapus=<?= $row['id'] ?>" class="delete" onclick="return confirm('Yakin ingin menghapus soal ini?')"><i class="fas fa-trash"></i> Hapus</a>
               </td>
             </tr>
             <tr class="preview-row">
-              <td colspan="4" class="preview-cell">
+              <td colspan="4" style="padding: 0 20px 15px 20px;">
                 <div class="preview-box">
-                  <div class="preview-title">
-                    <i class="fas fa-eye"></i> Preview Soal
-                  </div>
-                  
                   <div class="preview-question">
                     <?= htmlspecialchars($row['pertanyaan']) ?>
                   </div>
-
-                  <div class="opsi-grid">
-                    <?php foreach(['a','b','c','d'] as $o): ?>
-                      <div class="opsi-item <?= strtoupper($o) == $row['jawaban'] ? 'benar' : '' ?>">
-                        <span class="huruf"><?= strtoupper($o) ?>.</span>
-                        <?= htmlspecialchars($row['opsi_'.$o]) ?>
-                      </div>
+                  <div class="preview-opsi">
+                    <?php foreach(['A','B','C','D'] as $huruf): 
+                      $opsi = strtolower($huruf);
+                    ?>
+                      <span class="<?= $huruf == $row['jawaban'] ? 'benar' : '' ?>">
+                        <strong><?= $huruf ?>.</strong> <?= htmlspecialchars($row['opsi_'.$opsi]) ?>
+                      </span>
                     <?php endforeach; ?>
                   </div>
                 </div>
               </td>
             </tr>
-            <?php endwhile; ?>
-
-            <?php if($total == 0): ?>
+            <?php 
+              endwhile;
+            else:
+            ?>
             <tr>
-              <td colspan="4" style="text-align: center; padding: 40px; color: #999;">
-                <i class="fas fa-inbox" style="font-size: 40px; margin-bottom: 15px; display: block;"></i>
+              <td colspan="4" style="text-align: center; padding: 50px; color: #999;">
+                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; display: block;"></i>
                 Belum ada soal. Silakan tambah soal pertama.
               </td>
             </tr>
@@ -671,9 +602,7 @@ table tr:hover td {
         </table>
       </div>
     </div>
-
   </div>
-
 </div>
 
 </body>

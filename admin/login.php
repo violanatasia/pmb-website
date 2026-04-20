@@ -4,7 +4,7 @@ include "../config/db.php";
 
 if (isset($_POST['login'])) {
   $username = mysqli_real_escape_string($conn, $_POST['username']);
-  $password = md5($_POST['password']); // SESUAI DB (MD5)
+  $password = md5($_POST['password']);
 
   $query = mysqli_query($conn, "
     SELECT * FROM admin 
@@ -15,16 +15,12 @@ if (isset($_POST['login'])) {
   $data = mysqli_fetch_assoc($query);
 
   if ($data) {
-
     session_regenerate_id(true);
-
     $_SESSION['admin'] = true;
     $_SESSION['admin_id'] = $data['id'];
     $_SESSION['username'] = $data['username'];
-
     header("Location: dashboard.php");
     exit;
-
   } else {
     $error = "Username atau Password salah!";
   }
@@ -37,264 +33,158 @@ if (isset($_POST['login'])) {
 <title>Login Admin - Oriental University</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
 <style>
 *{
   box-sizing:border-box;
-  margin:0;
-  padding:0;
+  font-family:'Poppins', Arial, sans-serif;
 }
-
-html,body{
-  height:100%;
-  font-family:'Poppins', sans-serif;
-}
-
-/* ================= BACKGROUND ================= */
 body{
-  background:url('../assets/bg_class.jpg') center/cover no-repeat fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin:0;
+  height:100vh;
 }
-
-/* ================= OVERLAY ================= */
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
+.wrapper{
+  display:flex;
+  width:100%;
+  height:100vh;
+}
+.left{
+  width:50%;
+  background:#5b0f14;
   display:flex;
   justify-content:center;
   align-items:center;
-  padding:20px;
 }
-
-/* ================= CARD ================= */
-.card{
+.right{
+  width:50%;
   position:relative;
-  background:rgba(255,255,255,.97);
-  padding:85px 42px 42px;
-  border-radius:26px;
-  width:100%;
-  max-width:420px;
+  background:url("../assets/ou.jpg") center / cover no-repeat;
+}
+.right::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+}
+.card{
+  width:360px;
+  background:rgba(255,255,255,0.25);
+  padding:35px;
+  border-radius:18px;
+  backdrop-filter:blur(8px);
+  color:white;
+  position:relative;
+  box-shadow:0 15px 35px rgba(0,0,0,.3);
+}
+.card h1{
   text-align:center;
-  box-shadow:0 30px 70px rgba(0,0,0,.35);
-  animation:fadeUp .5s ease;
+  margin-top:45px;
+  margin-bottom:25px;
+  color:#5b0f14;
 }
-
-@keyframes fadeUp{
-  from{opacity:0; transform:translateY(25px);}
-  to{opacity:1; transform:translateY(0);}
-}
-
-/* logo bulat */
-.card-logo{
-  width:110px;
-  height:110px;
-  background:linear-gradient(135deg,#7b0f0f,#a41616);
+.logo-wrapper{
+  width:100px;
+  height:100px;
+  background:#5b0f14;
   border-radius:50%;
   display:flex;
-  align-items:center;
   justify-content:center;
+  align-items:center;
   position:absolute;
-  top:-55px;
+  top:-40px;
   left:50%;
   transform:translateX(-50%);
-  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  box-shadow:0 8px 20px rgba(0,0,0,.3);
 }
-
-.card-logo img{
-  width:160px;
+.logo-wrapper img{
+  width:140px;
+  height:140px;
 }
-
-/* greeting */
-.greeting{
+label{
   font-size:14px;
-  color:#666;
-  margin-bottom:4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  display: block;
+  margin-bottom: 5px;
 }
-
-.greeting::before,
-.greeting::after {
-  content: "•";
-  color: #7b0f0f;
-  opacity: 0.5;
-}
-
-.card h2{
-  font-family:'Playfair Display', serif;
-  color:#7b0f0f;
-  margin:0 0 20px;
-  font-size:26px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-/* ================= BADGE ADMIN ================= */
-.admin-badge {
-  display: inline-block;
-  background: #7b0f0f;
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-}
-
-/* ================= FORM GROUP ================= */
-.form-group{
-  text-align:left;
-  margin-bottom:20px;
-}
-
-.form-group label{
-  font-size:12.5px;
-  font-weight:600;
-  color:#555;
-  display:block;
-  margin-bottom:5px;
-}
-
-.form-group input{
+input{
   width:100%;
-  padding:12px 14px;
-  border-radius:13px;
-  border:1px solid #e6e6e6;
-  background:#f8f8f8;
+  padding:12px;
+  margin-top:6px;
+  margin-bottom:14px;
+  border:none;
+  border-radius:10px;
   font-size:14px;
-  transition: all 0.2s;
-  font-family:'Poppins', sans-serif;
 }
-
-.form-group input:focus{
-  outline:none;
-  border-color:#7b0f0f;
-  background:#fff;
-  box-shadow: 0 0 0 3px rgba(123,15,15,0.1);
+.password-box{
+  position:relative;
 }
-
-/* ================= BUTTON ================= */
-.btn{
-  margin-top:20px;
+.password-box input{
+  padding-right:48px;
+}
+.eye{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:20px;
+  height:20px;
+  cursor:pointer;
+  background:url("../assets/eye.svg") center / contain no-repeat;
+  opacity:.6;
+}
+.eye.active{
+  background:url("../assets/eye-off.svg") center / contain no-repeat;
+}
+button{
   width:100%;
-  padding:14px;
-  border-radius:30px;
-  font-weight:700;
-  text-align:center;
-  text-decoration:none;
-  display:block;
-  transition:.25s;
-  border: none;
-  cursor: pointer;
-  font-size:15px;
-  background:#7b0f0f;
-  color:white;
-  position: relative;
-  overflow: hidden;
+  padding:12px;
+  background:#f4b400;
+  border:none;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:16px;
+  margin-top:10px;
 }
-
-.btn:hover{
-  background:#5e0b0b;
-  transform:translateY(-1px);
-  box-shadow:0 4px 12px rgba(123,15,15,.3);
+button:hover{
+  background:#ffcc33;
 }
-
-.btn:active {
-  transform: translateY(0);
-}
-
-/* ================= ERROR ================= */
 .error{
-  background:#ffe9e9;
-  color:#b71c1c;
-  padding:12px 16px;
-  border-radius:12px;
-  margin-bottom:20px;
+  background:#ffcccc;
+  color:#800000;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:15px;
   font-size:14px;
   text-align:center;
-  border-left:4px solid #b71c1c;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
-
-.error::before {
-  content: "!";
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  background: #b71c1c;
-  color: white;
-  border-radius: 50%;
-  font-weight: 600;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-/* ================= FOOTER LINK ================= */
-.footer-link{
-  margin-top:25px;
+.back-link{
+  text-align:center;
+  margin-top:15px;
   font-size:13px;
-  color:#888;
-  padding-top:15px;
-  border-top: 1px solid #eee;
 }
-
-.footer-link a{
-  color:#7b0f0f;
+.back-link a{
+  color:#ffd966;
   text-decoration:none;
-  font-weight:500;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: 0.2s;
+}
+.back-link a:hover{
+  text-decoration:underline;
+}
+.badge-admin{
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
-.footer-link a:hover{
-  color: #5e0b0b;
-  gap: 8px;
-}
-
-/* ================= INPUT ICON (OPSIONAL) ================= */
-/* Kalau mau tambah icon di input, uncomment ini */
-/*
-.input-wrapper {
-  position: relative;
-}
-
-.input-wrapper input {
-  padding-left: 40px;
-}
-
-.input-wrapper i {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #7b0f0f;
-  opacity: 0.6;
-  font-size: 16px;
-}
-*/
-
-/* mobile */
-@media (max-width:500px){
-  .card{
-    padding:80px 24px 30px;
+@media(max-width:768px){
+  .wrapper{
+    flex-direction:column;
   }
-  
-  .card h2 {
-    font-size: 24px;
+  .left,.right{
+    width:100%;
+    height:50vh;
   }
 }
 </style>
@@ -302,59 +192,63 @@ body{
 
 <body>
 
-<div class="overlay">
-  <div class="card">
+<div class="wrapper">
 
-    <div class="card-logo">
-      <img src="../assets/logo_ou.png" alt="Logo OU">
-    </div>
+  <div class="left">
+    <div class="card">
 
-    <!-- Badge Admin -->
-    <div class="admin-badge">ADMINISTRATOR</div>
+      <div class="logo-wrapper">
+        <img src="../assets/logo_ou.png" alt="Logo">
+      </div>
 
-    <div class="greeting">Welcome Back</div>
-    <h2>Login Admin</h2>
+      <h1>Admin Login</h1>
+      
+      <div style="text-align: center;">
+        <span class="badge-admin">🔐 ADMINISTRATOR</span>
+      </div>
 
-    <?php if(isset($error)): ?>
-      <div class="error"><?= $error ?></div>
-    <?php endif; ?>
+      <?php if (isset($error)) { ?>
+        <div class="error"><?= $error ?></div>
+      <?php } ?>
 
-    <form method="post">
-      <div class="form-group">
+      <form method="POST">
+
         <label>Username</label>
-        <!-- Kalau mau pake icon, ganti jadi ini:
-        <div class="input-wrapper">
-          <i class="fas fa-user"></i>
-          <input type="text" name="username" placeholder="Masukkan username" required autofocus>
-        </div>
-        -->
         <input type="text" name="username" placeholder="Masukkan username" required autofocus>
-      </div>
 
-      <div class="form-group">
         <label>Password</label>
-        <!-- Kalau mau pake icon, ganti jadi ini:
-        <div class="input-wrapper">
-          <i class="fas fa-lock"></i>
-          <input type="password" name="password" placeholder="Masukkan password" required>
+        <div class="password-box">
+          <input type="password" name="password" id="password"
+                 placeholder="Masukkan password" required>
+          <span class="eye"
+                onclick="togglePasswordIcon(this,'password')"></span>
         </div>
-        -->
-        <input type="password" name="password" placeholder="Masukkan password" required>
+
+        <button name="login">LOGIN</button>
+      </form>
+
+      <div class="back-link">
+        <a href="../index.php">← Kembali ke Beranda</a>
       </div>
 
-      <button name="login" class="btn">LOGIN</button>
-    </form>
-
-    <div class="footer-link">
-      <a href="../index.php">Kembali ke Beranda</a>
     </div>
-    
-    <!-- Tahun (optional) -->
-    <div style="font-size: 11px; color: #ccc; margin-top: 10px;">
-      © <?= date('Y') ?> Oriental University
-    </div>
-
   </div>
+
+  <div class="right"></div>
 </div>
+
+<script>
+function togglePasswordIcon(el, id){
+  const input = document.getElementById(id);
+  if(input.type === "password"){
+    input.type = "text";
+    el.classList.add("active");
+  }else{
+    input.type = "password";
+    el.classList.remove("active");
+  }
+}
+</script>
+
 </body>
 </html>

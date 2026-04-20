@@ -27,12 +27,26 @@ if (strtolower((string)$user['status_kelulusan']) !== 'lulus') {
 $qCek = mysqli_query($conn, "SELECT * FROM daftar_ulang WHERE user_id='$user_id'");
 $sudah_daftar = mysqli_num_rows($qCek) > 0;
 
+// Ambil data daftar ulang jika sudah ada
+$daftar_ulang_data = null;
+$status_verifikasi = 'pending';
+$keterangan_verifikasi = '';
 $prodi = '';
 $nama_kartu = $user['nama'];
 $foto = '';
 $nim_display = $user['nim'] ?? '-';
 
-/* 🔥 DEFAULT VALUE */
+if ($sudah_daftar) {
+  $daftar_ulang_data = mysqli_fetch_assoc($qCek);
+  $status_verifikasi = $daftar_ulang_data['status_verifikasi'] ?? 'pending';
+  $keterangan_verifikasi = $daftar_ulang_data['keterangan_verifikasi'] ?? '';
+  $prodi = $daftar_ulang_data['prodi'];
+  $nama_kartu = $daftar_ulang_data['nama_lengkap'];
+  $foto = $daftar_ulang_data['foto'] ?? '';
+  $nim_display = $user['nim'] ?? '-';
+}
+
+/* 🔥 DEFAULT VALUE UNTUK FORM */
 $form_nama_lengkap = $user['nama'];
 $form_nik = '';
 $form_no_hp = '';
@@ -45,23 +59,18 @@ $form_no_hp_ortu = '';
 $form_alamat = '';
 $form_prodi = '';
 
-if ($sudah_daftar) {
-  $d = mysqli_fetch_assoc($qCek);
-  $prodi = $d['prodi'];
-  $nama_kartu = $d['nama_lengkap'];
-  $foto = $d['foto'] ?? '';
-
-  $form_nama_lengkap = $d['nama_lengkap'];
-  $form_nik = $d['nik'];
-  $form_no_hp = $d['no_hp'];
-  $form_tempat_lahir = $d['tempat_lahir'] ?? '';
-  $form_tanggal_lahir = $d['tanggal_lahir'] ?? '';
-  $form_jenis_kelamin = $d['jenis_kelamin'] ?? '';
-  $form_asal_sekolah = $d['asal_sekolah'] ?? '';
-  $form_nama_ortu = $d['nama_ortu'];
-  $form_no_hp_ortu = $d['no_hp_ortu'];
-  $form_alamat = $d['alamat'];
-  $form_prodi = $d['prodi'];
+if ($sudah_daftar && $daftar_ulang_data) {
+  $form_nama_lengkap = $daftar_ulang_data['nama_lengkap'];
+  $form_nik = $daftar_ulang_data['nik'];
+  $form_no_hp = $daftar_ulang_data['no_hp'];
+  $form_tempat_lahir = $daftar_ulang_data['tempat_lahir'] ?? '';
+  $form_tanggal_lahir = $daftar_ulang_data['tanggal_lahir'] ?? '';
+  $form_jenis_kelamin = $daftar_ulang_data['jenis_kelamin'] ?? '';
+  $form_asal_sekolah = $daftar_ulang_data['asal_sekolah'] ?? '';
+  $form_nama_ortu = $daftar_ulang_data['nama_ortu'];
+  $form_no_hp_ortu = $daftar_ulang_data['no_hp_ortu'];
+  $form_alamat = $daftar_ulang_data['alamat'];
+  $form_prodi = $daftar_ulang_data['prodi'];
 }
 
 /* ================= FUNCTION UPLOAD ================= */
@@ -113,48 +122,20 @@ if (isset($_POST['daftar_ulang']) && !$sudah_daftar) {
     die("Upload file gagal. Pastikan format benar dan ukuran < 2MB.");
   }
 
+  // Insert dengan status pending
   mysqli_query($conn, "
     INSERT INTO daftar_ulang
-    (user_id, nama_lengkap, nik, no_hp, tempat_lahir, tanggal_lahir, jenis_kelamin, asal_sekolah, nama_ortu, no_hp_ortu, alamat, prodi, ijazah, kk, foto)
+    (user_id, nama_lengkap, nik, no_hp, tempat_lahir, tanggal_lahir, jenis_kelamin, asal_sekolah, nama_ortu, no_hp_ortu, alamat, prodi, ijazah, kk, foto, status_verifikasi)
     VALUES
-    ('$user_id','$nama_lengkap','$nik','$no_hp','$tempat_lahir','$tanggal_lahir','$jenis_kelamin','$asal_sekolah','$nama_ortu','$no_hp_ortu','$alamat','$prodi','$file_ijazah','$file_kk','$file_foto')
+    ('$user_id','$nama_lengkap','$nik','$no_hp','$tempat_lahir','$tanggal_lahir','$jenis_kelamin','$asal_sekolah','$nama_ortu','$no_hp_ortu','$alamat','$prodi','$file_ijazah','$file_kk','$file_foto','pending')
   ");
 
-  /* ================= GENERATE NIM ================= */
-  if (empty($user['nim'])) {
-
-    $tahun = date("Y");
-    $kode_prodi = strtoupper(substr(str_replace(' ','',$prodi),0,2));
-
-    $qNim = mysqli_query($conn,"
-      SELECT nim FROM users
-      WHERE nim IS NOT NULL
-      ORDER BY nim DESC LIMIT 1
-    ");
-
-    $urut = 1;
-    if ($n = mysqli_fetch_assoc($qNim)) {
-      $urut = (int)substr($n['nim'],-4) + 1;
-    }
-
-    $nim = $tahun.$kode_prodi.str_pad($urut,4,'0',STR_PAD_LEFT);
-
-    mysqli_query($conn,"UPDATE users SET nim='$nim' WHERE id='$user_id'");
-    $user['nim'] = $nim;
-    $nim_display = $nim;
-  }
-
   $sudah_daftar = true;
-  $nama_kartu = $nama_lengkap;
-  $foto = $file_foto;
+  $status_verifikasi = 'pending';
   
   // Refresh data
   $qCek = mysqli_query($conn, "SELECT * FROM daftar_ulang WHERE user_id='$user_id'");
-  $d = mysqli_fetch_assoc($qCek);
-  $prodi = $d['prodi'];
-  $form_tempat_lahir = $d['tempat_lahir'];
-  $form_tanggal_lahir = $d['tanggal_lahir'];
-  $form_jenis_kelamin = $d['jenis_kelamin'];
+  $daftar_ulang_data = mysqli_fetch_assoc($qCek);
 }
 ?>
 <!DOCTYPE html>
@@ -163,6 +144,7 @@ if (isset($_POST['daftar_ulang']) && !$sudah_daftar) {
 <meta charset="UTF-8">
 <title>Daftar Ulang - Oriental University</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 
 /* ✅ STICKY FOOTER FIX */
@@ -219,6 +201,39 @@ body{
   max-width:860px;
   margin:40px auto;
   padding:0 20px;
+}
+
+/* STATUS CARD */
+.status-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.status-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.status-pending {
+  color: #f5b400;
+}
+
+.status-verified {
+  color: #28a745;
+}
+
+.status-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+}
+
+.status-card p {
+  color: #666;
+  margin: 10px 0;
 }
 
 /* KARTU MAHASISWA SIMPLE ELEGAN */
@@ -444,6 +459,11 @@ input:focus, textarea:focus, select:focus {
   margin-top: 0;
 }
 
+.btn-disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
 /* FOOTER */
 .footer{
   background:#0c0c0c;
@@ -470,64 +490,95 @@ input:focus, textarea:focus, select:focus {
 
 <?php if($sudah_daftar): ?>
 
-<!-- KARTU MAHASISWA SIMPLE -->
-<div class="student-card" id="cardArea">
-  <div class="card-header">
-    <h3>KARTU MAHASISWA</h3>
-    <p>ORIENTAL UNIVERSITY</p>
-  </div>
-
-  <div class="card-content">
-    <div class="photo-box">
-      <?php if(!empty($foto) && file_exists("uploads/foto/".$foto)): ?>
-        <img src="uploads/foto/<?= htmlspecialchars($foto) ?>" alt="foto mahasiswa">
-      <?php else: ?>
-        <div class="no-photo">
-          FOTO<br>TIDAK ADA
-        </div>
+  <!-- STATUS VERIFIKASI CARD -->
+  <div class="status-card">
+    <?php if($status_verifikasi == 'pending'): ?>
+      <div class="status-icon status-pending">⏳</div>
+      <h3>Menunggu Verifikasi</h3>
+      <p>Data daftar ulang Anda sedang dalam proses verifikasi oleh admin.</p>
+      <p style="font-size: 14px; color: #f5b400;">Mohon tunggu konfirmasi dari admin.</p>
+      <?php if($keterangan_verifikasi): ?>
+        <p style="font-size: 13px; color: #dc3545; margin-top: 10px;">
+          <strong>Catatan:</strong> <?= htmlspecialchars($keterangan_verifikasi) ?>
+        </p>
       <?php endif; ?>
+    <?php elseif($status_verifikasi == 'verified'): ?>
+      <div class="status-icon status-verified">✅</div>
+      <h3>Verifikasi Berhasil!</h3>
+      <p>Selamat! Data daftar ulang Anda telah diverifikasi.</p>
+      <p style="color: #28a745;">Berikut adalah Kartu Mahasiswa Anda:</p>
+    <?php endif; ?>
+  </div>
+
+  <!-- KARTU MAHASISWA (hanya tampil jika status verified) -->
+  <?php if($status_verifikasi == 'verified'): ?>
+  <div class="student-card" id="cardArea">
+    <div class="card-header">
+      <h3>KARTU MAHASISWA</h3>
+      <p>ORIENTAL UNIVERSITY</p>
     </div>
-    
-    <div class="info-details">
-      <h2><?= htmlspecialchars($nama_kartu) ?></h2>
-      <div class="nim">NIM: <?= htmlspecialchars($nim_display) ?></div>
-      
-      <div class="info-row">
-        <span class="info-label">Prodi</span>
-        <span class="info-value">: <?= htmlspecialchars($prodi) ?></span>
+
+    <div class="card-content">
+      <div class="photo-box">
+        <?php if(!empty($foto) && file_exists("uploads/foto/".$foto)): ?>
+          <img src="uploads/foto/<?= htmlspecialchars($foto) ?>" alt="foto mahasiswa">
+        <?php else: ?>
+          <div class="no-photo">
+            FOTO<br>TIDAK ADA
+          </div>
+        <?php endif; ?>
       </div>
       
-      <div class="info-row">
-        <span class="info-label">Jenis Kelamin</span>
-        <span class="info-value">: <?= htmlspecialchars($form_jenis_kelamin) ?></span>
+      <div class="info-details">
+        <h2><?= htmlspecialchars($nama_kartu) ?></h2>
+        <div class="nim">NIM: <?= htmlspecialchars($nim_display) ?></div>
+        
+        <div class="info-row">
+          <span class="info-label">Prodi</span>
+          <span class="info-value">: <?= htmlspecialchars($prodi) ?></span>
+        </div>
+        
+        <div class="info-row">
+          <span class="info-label">Jenis Kelamin</span>
+          <span class="info-value">: <?= htmlspecialchars($form_jenis_kelamin) ?></span>
+        </div>
+        
+        <div class="info-row">
+          <span class="info-label">Tempat, Tanggal Lahir</span>
+          <span class="info-value">: <?= htmlspecialchars($form_tempat_lahir) ?>, <?= date('d/m/Y', strtotime($form_tanggal_lahir)) ?></span>
+        </div>
       </div>
-      
-      <div class="info-row">
-        <span class="info-label">Tempat, Tanggal Lahir</span>
-        <span class="info-value">: <?= htmlspecialchars($form_tempat_lahir) ?>, <?= date('d/m/Y', strtotime($form_tanggal_lahir)) ?></span>
-      </div>
+    </div>
+
+    <div class="card-footer">
+      <span>✧ Kartu ini berlaku selama menjadi mahasiswa aktif ✧</span>
     </div>
   </div>
 
-  <div class="card-footer">
-    <span>✧ Kartu ini berlaku selama menjadi mahasiswa aktif ✧</span>
+  <div class="button-group">
+    <button onclick="downloadCard()" class="btn">
+      Download Kartu
+    </button>
+    <a href="dashboard.php" class="btn btn-secondary">
+      Dashboard
+    </a>
   </div>
-</div>
-
-<div class="button-group">
-  <button onclick="downloadCard()" class="btn">
-    Download Kartu
-  </button>
-  <a href="dashboard.php" class="btn btn-secondary">
-    Dashboard
-  </a>
-</div>
+  <?php else: ?>
+  <div class="button-group">
+    <a href="dashboard.php" class="btn btn-secondary">
+      Kembali ke Dashboard
+    </a>
+  </div>
+  <?php endif; ?>
 
 <?php else: ?>
 
 <div class="form-container">
   <h2>Form Daftar Ulang</h2>
   <p style="color: #666; margin-bottom: 25px;">Silakan lengkapi data diri Anda untuk proses daftar ulang</p>
+  <p style="color: #f5b400; margin-bottom: 20px; font-size: 14px;">
+    <i class="fas fa-info-circle"></i> Setelah submit, data akan diverifikasi oleh admin terlebih dahulu.
+  </p>
 
   <form method="post" enctype="multipart/form-data">
     <div class="form-grid">
@@ -645,6 +696,16 @@ function downloadCard() {
     link.click();
   });
 }
+
+// Tampilkan notifikasi jika baru submit
+<?php if(isset($_POST['daftar_ulang']) && $sudah_daftar): ?>
+Swal.fire({
+  title: 'Berhasil!',
+  text: 'Data daftar ulang berhasil dikirim. Silakan tunggu verifikasi dari admin.',
+  icon: 'success',
+  confirmButtonText: 'OK'
+});
+<?php endif; ?>
 </script>
 
 </body>

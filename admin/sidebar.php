@@ -13,7 +13,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
   </a>
   <a href="data-pendaftar.php" class="<?= $current_page == 'data-pendaftar.php' ? 'active' : '' ?>">
     <i class="fas fa-users"></i>
-    <span>Data Pendaftar</span>
+    <span>List Pendaftar</span>
   </a>
   <a href="kelolasoal.php" class="<?= $current_page == 'kelolasoal.php' ? 'active' : '' ?>">
     <i class="fas fa-question-circle"></i>
@@ -22,6 +22,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
   <a href="data-hasiltes.php" class="<?= $current_page == 'data-hasiltes.php' ? 'active' : '' ?>">
     <i class="fas fa-chart-bar"></i>
     <span>Hasil Tes</span>
+  </a>
+  <a href="data-mahasiswa.php" class="<?= $current_page == 'data-mahasiswa.php' ? 'active' : '' ?>">
+    <i class="fas fa-file-signature"></i>
+    <span>Data Mahasiswa</span>
   </a>
   <a href="data-daftarulang.php" class="<?= $current_page == 'data-daftarulang.php' ? 'active' : '' ?>">
     <i class="fas fa-file-signature"></i>

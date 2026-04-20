@@ -355,15 +355,15 @@ header{
   <div class="alur">
     <div class="box">
       <h4>Global Academic Excellence</h4>
-      <p>Oriental University mengedepankan standar pendidikan internasional dengan kurikulum berbasis riset dan teknologi modern. Mahasiswa dibimbing oleh tenaga pengajar profesional dan berpengalaman di bidangnya.</p>
+      <p>Oriental University menerapkan pendidikan berstandar internasional dengan kurikulum berbasis riset dan teknologi, serta didukung pengajar profesional.</p>
     </div>
     <div class="box">
       <h4>Innovation & Technology Driven</h4>
-      <p>Didukung sistem pembelajaran digital dan fasilitas teknologi terkini, Oriental University mempersiapkan mahasiswa untuk menghadapi era industri 5.0 dengan kompetensi global dan adaptif.</p>
+      <p>Oriental University didukung pembelajaran digital dan teknologi modern untuk menyiapkan mahasiswa siap menghadapi era industri 5.0.</p>
     </div>
     <div class="box">
       <h4>Character & Leadership Development</h4>
-      <p>Tidak hanya fokus pada akademik, Oriental University membentuk karakter, kepemimpinan, dan integritas mahasiswa agar siap menjadi pemimpin masa depan yang beretika dan berdaya saing tinggi.</p>
+      <p>Oriental University tidak hanya fokus pada akademik, tetapi juga membentuk karakter dan kepemimpinan mahasiswa agar siap bersaing.</p>
     </div>
   </div>
 </div>

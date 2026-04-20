@@ -7,73 +7,37 @@ if (!isset($_SESSION['admin'])) {
   exit;
 }
 
-// Ambil username admin
 $admin_username = $_SESSION['username'] ?? 'Admin';
 
-$search = $_GET['search'] ?? '';
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = 10; // Turunin dikit biar muat banyak kolom
-$offset = ($page - 1) * $limit;
+// Tampilkan pesan sukses
+$success_message = $_SESSION['success'] ?? '';
+$error_message = $_SESSION['error'] ?? '';
+unset($_SESSION['success']);
+unset($_SESSION['error']);
 
-$where = "";
-if($search){
-  $safe = mysqli_real_escape_string($conn, $search);
-  $where = "WHERE u.nama LIKE '%$safe%' 
-            OR u.nomor_tes LIKE '%$safe%' 
-            OR d.nama_lengkap LIKE '%$safe%'
-            OR d.nik LIKE '%$safe%'
-            OR d.prodi LIKE '%$safe%'
-            OR d.tempat_lahir LIKE '%$safe%'
-            OR d.asal_sekolah LIKE '%$safe%'";
-}
-
-/* TOTAL DAFTAR ULANG */
-$total = mysqli_fetch_assoc(mysqli_query($conn,
-  "SELECT COUNT(*) as total FROM daftar_ulang"
-))['total'];
-$total_pages = ceil($total / $limit);
-
-/* DATA dengan pagination */
+// Ambil semua data (tanpa filter)
 $query = mysqli_query($conn, "
-  SELECT 
-    d.id,
-    u.nama as nama_akun,
-    u.nomor_tes,
-    u.email,
-    d.nama_lengkap,
-    d.nik,
-    d.no_hp,
-    d.tempat_lahir,
-    d.tanggal_lahir,
-    d.jenis_kelamin,
-    d.asal_sekolah,
-    d.nama_ortu,
-    d.no_hp_ortu,
-    d.alamat,
-    d.prodi,
-    d.ijazah,
-    d.kk,
-    d.foto,
-    d.created_at
+  SELECT d.*, u.nama, u.nomor_tes
   FROM daftar_ulang d
   JOIN users u ON d.user_id = u.id
-  $where
   ORDER BY d.created_at DESC
-  LIMIT $offset, $limit
 ");
+
+// Hitung statistik
+$total = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM daftar_ulang"))['total'];
+$pending = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM daftar_ulang WHERE status_verifikasi = 'pending'"))['total'];
+$verified = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM daftar_ulang WHERE status_verifikasi = 'verified'"))['total'];
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Data Daftar Ulang - Oriental University</title>
+<title>Daftar Ulang - Oriental University</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<!-- Font Awesome -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 * {
   margin: 0;
@@ -83,45 +47,42 @@ $query = mysqli_query($conn, "
 
 body {
   font-family: 'Poppins', sans-serif;
-  background: #f0f2f5;
+  background: #f5f5f5;
 }
 
-/* ================= CONTAINER ================= */
+/* CONTAINER */
 .container {
   display: flex;
   min-height: 100vh;
 }
 
-/* ================= SIDEBAR ================= */
+/* SIDEBAR */
 .sidebar {
-  width: 250px;
+  width: 260px;
   background: #7b0f0f;
   color: white;
-  padding: 25px 20px;
   position: fixed;
   height: 100vh;
+  padding: 25px 0;
   box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  overflow-y: auto;
 }
 
 .sidebar h2 {
   text-align: center;
   margin-bottom: 30px;
-  font-size: 22px;
-  padding-bottom: 15px;
+  font-size: 20px;
+  padding: 0 20px 15px;
   border-bottom: 1px solid rgba(255,255,255,0.2);
-  font-weight: 600;
-  letter-spacing: 1px;
 }
 
 .sidebar a {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 15px;
+  padding: 12px 25px;
   color: white;
   text-decoration: none;
-  border-radius: 10px;
-  margin-bottom: 5px;
   transition: all 0.3s;
   font-size: 14px;
 }
@@ -134,207 +95,104 @@ body {
 .sidebar a:hover {
   background: #f5b400;
   color: #7b0f0f;
-  transform: translateX(3px);
 }
 
 .sidebar a.active {
   background: #f5b400;
   color: #7b0f0f;
-  font-weight: 500;
 }
 
 .sidebar a.logout {
-  margin-top: 40px;
+  margin-top: 50px;
   border-top: 1px solid rgba(255,255,255,0.2);
   padding-top: 20px;
 }
 
-/* ================= CONTENT ================= */
+/* CONTENT */
 .content {
   flex: 1;
-  margin-left: 250px;
-  padding: 25px 30px;
+  margin-left: 260px;
+  padding: 30px;
+  min-height: 100vh;
 }
 
-/* Header */
-.header {
+/* TOP BAR */
+.top-bar {
   background: white;
   padding: 20px 25px;
-  border-radius: 16px;
+  border-radius: 12px;
   margin-bottom: 25px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-  border: 1px solid #eee;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.header h1 {
+.top-bar h1 {
   color: #7b0f0f;
   font-size: 24px;
   font-weight: 600;
-  position: relative;
 }
 
-.header h1::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 50px;
-  height: 3px;
-  background: #f5b400;
-  border-radius: 10px;
-}
-
-.header .user-info {
+.user-info {
   display: flex;
   align-items: center;
   gap: 10px;
   background: #f8f9fa;
   padding: 8px 18px;
-  border-radius: 30px;
-  border: 1px solid #eee;
+  border-radius: 25px;
 }
 
-.header .user-info i {
+.user-info i {
   color: #7b0f0f;
   font-size: 18px;
 }
 
-.header .user-info span {
-  font-weight: 500;
-  color: #333;
-}
-
-/* Stats Card */
-.stats-card {
-  background: white;
-  padding: 25px;
-  border-radius: 16px;
-  margin-bottom: 25px;
-  border: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
+/* STATS CARDS */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-}
-
-.stats-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.stats-icon {
-  width: 60px;
-  height: 60px;
-  background: #fff0f0;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #7b0f0f;
-  font-size: 28px;
-}
-
-.stats-text h3 {
-  font-size: 32px;
-  color: #7b0f0f;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.stats-text p {
-  color: #666;
-  font-size: 14px;
-}
-
-.stats-badge {
-  background: #d4edda;
-  color: #155724;
-  padding: 12px 25px;
-  border-radius: 40px;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Search Section */
-.search-section {
-  background: white;
-  padding: 20px 25px;
-  border-radius: 16px;
   margin-bottom: 25px;
-  border: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
 }
 
-.search-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #333;
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  transition: 0.3s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  border-left: 4px solid #7b0f0f;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 20px rgba(123,15,15,0.1);
+}
+
+.stat-card.total h3 { color: #7b0f0f; }
+.stat-card.pending h3 { color: #f5b400; }
+.stat-card.verified h3 { color: #28a745; }
+
+.stat-card h3 {
+  font-size: 32px;
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+
+.stat-card p {
+  color: #666;
+  font-size: 13px;
   font-weight: 500;
 }
 
-.search-title i {
-  color: #7b0f0f;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #f8f9fa;
-  padding: 5px 5px 5px 15px;
-  border-radius: 40px;
-  border: 1px solid #eee;
-}
-
-.search-box input {
-  border: none;
-  background: transparent;
-  padding: 10px 0;
-  width: 250px;
-  outline: none;
-  font-family: 'Poppins', sans-serif;
-  font-size: 14px;
-}
-
-.search-box input::placeholder {
-  color: #aaa;
-}
-
-.search-box button {
-  background: #7b0f0f;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 40px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: 0.2s;
-}
-
-.search-box button:hover {
-  background: #5e0b0b;
-}
-
-/* Table Card */
+/* TABLE CARD */
 .table-card {
   background: white;
   padding: 25px;
-  border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 .table-header {
@@ -342,278 +200,214 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 15px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .table-header h3 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   font-size: 18px;
-  font-weight: 600;
   color: #333;
 }
 
 .table-header h3 i {
   color: #7b0f0f;
+  margin-right: 8px;
 }
 
-.table-stats {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.table-header span {
   color: #666;
   font-size: 14px;
-  background: #f8f9fa;
-  padding: 8px 16px;
-  border-radius: 30px;
-}
-
-.table-stats i {
-  color: #7b0f0f;
 }
 
 .table-responsive {
   overflow-x: auto;
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
 }
 
-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1800px; /* Biar semua kolom muat */
 }
 
-table th {
+.data-table th {
   text-align: left;
-  padding: 15px 12px;
+  padding: 12px;
   background: #f8f9fa;
   color: #555;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-table td {
-  padding: 15px 12px;
+.data-table td {
+  padding: 12px;
   border-bottom: 1px solid #eee;
-  font-size: 14px;
+  font-size: 13px;
   color: #444;
-  vertical-align: middle;
 }
 
-table tr:hover td {
+.data-table tr:hover td {
   background: #fafafa;
 }
 
-/* Badge Prodi */
-.prodi-badge {
+/* STATUS BADGE */
+.status-badge {
   display: inline-block;
-  padding: 5px 12px;
-  border-radius: 30px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #d4edda;
-  color: #155724;
-  white-space: nowrap;
-}
-
-/* Jenis Kelamin Badge */
-.jk-badge {
-  display: inline-block;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
 }
 
-.jk-laki {
-  background: #cce5ff;
-  color: #004085;
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
 }
 
-.jk-perempuan {
-  background: #f8d7da;
-  color: #721c24;
+.status-verified {
+  background: #d4edda;
+  color: #155724;
 }
 
-/* Nomor Tes */
-.nomor-tes {
-  font-family: monospace;
+/* BUTTON */
+.btn-verify {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
   font-weight: 500;
-  color: #7b0f0f;
-  white-space: nowrap;
+  transition: 0.2s;
 }
 
-/* Link File */
-.file-link {
-  color: #7b0f0f;
-  text-decoration: none;
+.btn-verify:hover {
+  background: #218838;
+}
+
+.btn-verify i {
+  margin-right: 4px;
+}
+
+.done-badge {
+  color: #28a745;
   font-size: 12px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: 0.2s;
+  gap: 5px;
 }
 
-.file-link:hover {
+/* MODAL */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 100px auto;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+  padding: 15px 20px;
   background: #7b0f0f;
   color: white;
-}
-
-/* Foto Thumbnail */
-.foto-thumb {
-  width: 40px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.foto-thumb:hover {
-  transform: scale(2);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  z-index: 10;
-  position: relative;
-}
-
-/* Alamat */
-.alamat-cell {
-  max-width: 200px;
-  white-space: normal;
-  line-height: 1.5;
-}
-
-/* Pagination */
-.pagination {
+  border-radius: 12px 12px 0 0;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  margin-top: 25px;
 }
 
-.page-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: white;
-  border: 1px solid #eee;
-  color: #333;
-  text-decoration: none;
-  transition: 0.2s;
+.modal-header h3 {
+  font-size: 18px;
+  margin: 0;
 }
 
-.page-link:hover {
-  background: #7b0f0f;
+.close-modal {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cancel {
+  background: #6c757d;
   color: white;
-  border-color: #7b0f0f;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.page-link.active {
-  background: #7b0f0f;
+.btn-confirm {
+  background: #28a745;
   color: white;
-  border-color: #7b0f0f;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.page-link.disabled {
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-/* Empty State */
+/* EMPTY STATE */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 50px;
   color: #999;
 }
 
 .empty-state i {
-  font-size: 60px;
-  margin-bottom: 20px;
-  opacity: 0.3;
+  font-size: 48px;
+  margin-bottom: 15px;
+  display: block;
 }
 
-.empty-state h3 {
-  font-size: 18px;
-  margin-bottom: 5px;
-  color: #666;
-}
-
-.empty-state p {
-  font-size: 14px;
-}
-
-/* Responsive */
-@media (max-width: 992px) {
-  .search-box input {
-    width: 200px;
-  }
-}
-
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .sidebar {
     width: 70px;
-    padding: 20px 10px;
   }
-  
-  .sidebar h2,
-  .sidebar a span {
+  .sidebar h2, .sidebar a span {
     display: none;
   }
-  
   .sidebar a {
     justify-content: center;
-    padding: 15px;
   }
-  
-  .sidebar a i {
-    width: auto;
-    font-size: 20px;
-  }
-  
   .content {
     margin-left: 70px;
-    padding: 20px 15px;
+    padding: 20px;
   }
-  
-  .header {
+  .top-bar {
     flex-direction: column;
     gap: 15px;
-    align-items: flex-start;
+    text-align: center;
   }
-  
-  .stats-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .search-section {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .search-box {
-    width: 100%;
-  }
-  
-  .search-box input {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .table-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .stats {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -621,211 +415,157 @@ table tr:hover td {
 <body>
 
 <div class="container">
-
-  <!-- INCLUDE SIDEBAR -->
   <?php include "sidebar.php"; ?>
-
-  <!-- CONTENT -->
+  
   <div class="content">
-    
-    <!-- HEADER -->
-    <div class="header">
-      <h1>Data Daftar Ulang</h1>
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <h1>Verifikasi Daftar Ulang</h1>
       <div class="user-info">
         <i class="fas fa-user-circle"></i>
         <span><?= htmlspecialchars($admin_username) ?></span>
       </div>
     </div>
-
-    <!-- STATS CARD -->
-    <div class="stats-card">
-      <div class="stats-info">
-        <div class="stats-icon">
-          <i class="fas fa-users"></i>
-        </div>
-        <div class="stats-text">
-          <h3><?= number_format($total) ?></h3>
-          <p>Total Mahasiswa Terdaftar</p>
-        </div>
+    
+    <!-- STATS CARDS -->
+    <div class="stats">
+      <div class="stat-card total">
+        <h3><?= $total ?></h3>
+        <p>Total Pengajuan</p>
       </div>
-      <div class="stats-badge">
-        <i class="fas fa-check-circle"></i>
-        <span>Sudah Daftar Ulang</span>
+      <div class="stat-card pending">
+        <h3><?= $pending ?></h3>
+        <p>Menunggu Verifikasi</p>
+      </div>
+      <div class="stat-card verified">
+        <h3><?= $verified ?></h3>
+        <p>Sudah Diverifikasi</p>
       </div>
     </div>
-
-    <!-- SEARCH SECTION -->
-    <div class="search-section">
-      <div class="search-title">
-        <i class="fas fa-search"></i>
-        <span>Cari Data</span>
-      </div>
-      
-      <form method="GET" class="search-box">
-        <input type="text" name="search" placeholder="Cari nama / NIK / prodi / asal sekolah..."
-               value="<?= htmlspecialchars($search) ?>">
-        <button type="submit">
-          <i class="fas fa-search"></i> Cari
-        </button>
-      </form>
-    </div>
-
+    
     <!-- TABLE CARD -->
     <div class="table-card">
       <div class="table-header">
-        <h3>
-          <i class="fas fa-list"></i>
-          Detail Mahasiswa Daftar Ulang
-        </h3>
-        
-        <?php if(mysqli_num_rows($query) > 0): ?>
-        <div class="table-stats">
-          <i class="fas fa-database"></i>
-          <span>Menampilkan <?= mysqli_num_rows($query) ?> dari <?= number_format($total) ?> data</span>
-        </div>
-        <?php endif; ?>
+        <h3><i class="fas fa-list"></i> Daftar Pengajuan Daftar Ulang</h3>
+        <span>Total: <?= number_format(mysqli_num_rows($query)) ?> data</span>
       </div>
-
+      
       <div class="table-responsive">
-        <table>
+        <table class="data-table">
           <thead>
             <tr>
               <th>No</th>
-              <th>Foto</th>
-              <th>Nama Lengkap</th>
-              <th>Nama Akun</th>
+              <th>Nama</th>
               <th>Nomor Tes</th>
-              <th>NIK</th>
-              <th>Email</th>
-              <th>Tempat Lahir</th>
-              <th>Tanggal Lahir</th>
-              <th>JK</th>
-              <th>Asal Sekolah</th>
               <th>Prodi</th>
-              <th>No HP</th>
-              <th>Nama Ortu</th>
-              <th>No HP Ortu</th>
-              <th>Alamat</th>
-              <th>Ijazah</th>
-              <th>KK</th>
-              <th>Tgl Daftar</th>
-            </tr>
-          </thead>
+              <th>Status</th>
+              <th>Aksi</th>
+            </thead>
           <tbody>
             <?php 
-            $no = $offset + 1; 
+            $no = 1;
             if(mysqli_num_rows($query) > 0):
-              while($row = mysqli_fetch_assoc($query)): 
-                $tgl_lahir = $row['tanggal_lahir'] ? date('d/m/Y', strtotime($row['tanggal_lahir'])) : '-';
+              while($row = mysqli_fetch_assoc($query)):
+                $status = $row['status_verifikasi'] ?: 'pending';
             ?>
             <tr>
               <td><?= $no++ ?></td>
-              <td>
-                <?php if($row['foto'] && file_exists("../uploads/foto/".$row['foto'])): ?>
-                  <img src="../uploads/foto/<?= $row['foto'] ?>" 
-                       alt="foto" class="foto-thumb">
-                <?php else: ?>
-                  <i class="fas fa-user-circle" style="font-size: 30px; color: #ccc;"></i>
-                <?php endif; ?>
-              </td>
-              <td><b><?= htmlspecialchars($row['nama_lengkap'] ?: $row['nama_akun']) ?></b></td>
-              <td><?= htmlspecialchars($row['nama_akun']) ?></td>
+              <td><strong><?= htmlspecialchars($row['nama_lengkap'] ?: $row['nama']) ?></strong></td>
               <td class="nomor-tes"><?= $row['nomor_tes'] ?></td>
-              <td><?= htmlspecialchars($row['nik'] ?: '-') ?></td>
-              <td><?= htmlspecialchars($row['email']) ?></td>
-              <td><?= htmlspecialchars($row['tempat_lahir'] ?: '-') ?></td>
-              <td><?= $tgl_lahir ?></td>
+              <td><?= htmlspecialchars($row['prodi'] ?: '-') ?></td>
               <td>
-                <?php if($row['jenis_kelamin']): ?>
-                  <span class="jk-badge <?= $row['jenis_kelamin'] == 'Laki-laki' ? 'jk-laki' : 'jk-perempuan' ?>">
-                    <?= $row['jenis_kelamin'] == 'Laki-laki' ? 'L' : 'P' ?>
-                  </span>
-                <?php else: ?>
-                  -
-                <?php endif; ?>
-              </td>
-              <td><?= htmlspecialchars($row['asal_sekolah'] ?: '-') ?></td>
-              <td>
-                <span class="prodi-badge">
-                  <i class="fas fa-graduation-cap"></i>
-                  <?= htmlspecialchars($row['prodi'] ?: '-') ?>
+                <span class="status-badge <?= $status == 'pending' ? 'status-pending' : 'status-verified' ?>">
+                  <?= $status == 'pending' ? 'Menunggu' : 'Diverifikasi' ?>
                 </span>
-              </td>
-              <td><?= htmlspecialchars($row['no_hp'] ?: '-') ?></td>
-              <td><?= htmlspecialchars($row['nama_ortu'] ?: '-') ?></td>
-              <td><?= htmlspecialchars($row['no_hp_ortu'] ?: '-') ?></td>
-              <td class="alamat-cell"><?= nl2br(htmlspecialchars($row['alamat'] ?: '-')) ?></td>
+               </td>
               <td>
-                <?php if($row['ijazah']): ?>
-                  <a href="../uploads/<?= $row['ijazah'] ?>" target="_blank" class="file-link">
-                    <i class="fas fa-file-pdf"></i> Lihat
-                  </a>
+                <?php if($status == 'pending'): ?>
+                  <button class="btn-verify" onclick="verify(<?= $row['id'] ?>, '<?= addslashes($row['nama_lengkap'] ?: $row['nama']) ?>')">
+                    <i class="fas fa-check"></i> Verifikasi
+                  </button>
                 <?php else: ?>
-                  -
+                  <span class="done-badge"><i class="fas fa-check-circle"></i> Selesai</span>
                 <?php endif; ?>
-              </td>
-              <td>
-                <?php if($row['kk']): ?>
-                  <a href="../uploads/<?= $row['kk'] ?>" target="_blank" class="file-link">
-                    <i class="fas fa-file-pdf"></i> Lihat
-                  </a>
-                <?php else: ?>
-                  -
-                <?php endif; ?>
-              </td>
-              <td><?= date('d/m/Y', strtotime($row['created_at'])) ?></td>
-            </tr>
+               </td>
+             </tr>
             <?php 
               endwhile;
             else:
             ?>
             <tr>
-              <td colspan="19" class="empty-state">
+              <td colspan="6" class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <h3>Data tidak ditemukan</h3>
-                <p>Coba gunakan kata kunci lain atau reset pencarian</p>
-                <?php if($search): ?>
-                <a href="data-daftarulang.php" style="color: #7b0f0f; text-decoration: none; margin-top: 10px; display: inline-block;">
-                  <i class="fas fa-times"></i> Reset Pencarian
-                </a>
-                <?php endif; ?>
+                Belum ada pengajuan daftar ulang
               </td>
             </tr>
             <?php endif; ?>
           </tbody>
         </table>
       </div>
-
-      <!-- PAGINATION -->
-      <?php if($total_pages > 1 && mysqli_num_rows($query) > 0): ?>
-      <div class="pagination">
-        <a href="?page=<?= max(1, $page-1) ?>&search=<?= urlencode($search) ?>" 
-           class="page-link <?= $page==1?'disabled':'' ?>">
-          <i class="fas fa-chevron-left"></i>
-        </a>
-        
-        <?php 
-        $start = max(1, $page - 2);
-        $end = min($total_pages, $page + 2);
-        for($i = $start; $i <= $end; $i++): 
-        ?>
-          <a href="?page=<?= $i ?>&search=<?= urlencode($search) ?>" 
-             class="page-link <?= $i==$page?'active':'' ?>">
-            <?= $i ?>
-          </a>
-        <?php endfor; ?>
-        
-        <a href="?page=<?= min($total_pages, $page+1) ?>&search=<?= urlencode($search) ?>" 
-           class="page-link <?= $page==$total_pages?'disabled':'' ?>">
-          <i class="fas fa-chevron-right"></i>
-        </a>
-      </div>
-      <?php endif; ?>
     </div>
-
   </div>
-
 </div>
+
+<!-- MODAL VERIFIKASI -->
+<div id="modalVerify" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3><i class="fas fa-check-circle"></i> Verifikasi Daftar Ulang</h3>
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+    </div>
+    <form method="POST" action="proses-verifikasi.php">
+      <input type="hidden" name="id" id="verify_id">
+      <input type="hidden" name="action" value="verify">
+      <div class="modal-body">
+        <p>Verifikasi daftar ulang <strong id="verify_name"></strong>?</p>
+        <p style="color: #28a745; margin-top: 10px; font-size: 13px;">
+          <i class="fas fa-info-circle"></i> Setelah diverifikasi, data akan masuk ke data mahasiswa.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" onclick="closeModal()">Batal</button>
+        <button type="submit" class="btn-confirm">Ya, Verifikasi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function verify(id, name) {
+    document.getElementById('verify_id').value = id;
+    document.getElementById('verify_name').innerHTML = name;
+    document.getElementById('modalVerify').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('modalVerify').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('modalVerify');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+<?php if($success_message): ?>
+Swal.fire({
+    title: 'Berhasil!',
+    text: '<?= $success_message ?>',
+    icon: 'success',
+    timer: 2000,
+    showConfirmButton: false
+});
+<?php endif; ?>
+
+<?php if($error_message): ?>
+Swal.fire({
+    title: 'Gagal!',
+    text: '<?= $error_message ?>',
+    icon: 'error'
+});
+<?php endif; ?>
+</script>
 
 </body>
 </html>
